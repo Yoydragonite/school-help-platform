@@ -1,233 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Help Platform</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            background: #333;
-            padding: 0.5rem;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 1rem;
-            font-size: 1.2rem;
-        }
-        nav a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 1rem;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        input, textarea, button {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .help-requests {
-            margin-top: 2rem;
-        }
-        .request {
-            border: 1px solid #ddd;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            background: #f9f9f9;
-        }
-        .help-btn {
-            background-color: #008CBA;
-            border: none;
-            padding: 0.5rem 1rem;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .help-btn:hover {
-            background-color: #007bb5;
-        }
-        .delete-btn {
-            background-color: #f44336;
-            border: none;
-            padding: 0.5rem 1rem;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            background-color: #d32f2f;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>School Help Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #help-requests {
+      margin-top: 30px;
+    }
+    .request {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .dm-window {
+      margin-top: 20px;
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      height: 200px;
+      overflow-y: scroll;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>School Help Platform</h1>
-        <p>Ask for help and help others through direct messages</p>
-    </header>
-    <nav>
-        <a href="#" onclick="showPage('homePage')">Home</a>
-        <a href="#" onclick="showPage('submitPage')">Submit a Request</a>
-    </nav>
-    <div class="container" id="homePage">
-        <h2>All Help Requests</h2>
-        <div class="help-requests" id="helpRequests"></div>
-    </div>
+  <header>
+    <h1>School Help Platform</h1>
+    <button onclick="showRequestForm()">Submit a Help Request</button>
+  </header>
 
-    <div class="container" id="submitPage" style="display: none;">
-        <h2>Submit a Help Request</h2>
-        <form id="helpForm">
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input type="text" id="title" name="title" placeholder="Briefly describe your problem" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="5" placeholder="Provide more details about your problem" required></textarea>
-            </div>
-            <button type="submit">Submit Request</button>
-        </form>
-    </div>
+  <div id="request-form" style="display:none; margin-top: 20px;">
+    <textarea id="help-text" rows="4" style="width:100%;"></textarea><br>
+    <button onclick="submitRequest()">Submit</button>
+  </div>
 
-    <div class="container" id="dmPage" style="display: none;">
-        <h2>Private DM</h2>
-        <p>You are now chatting about: <span id="dmTitle"></span></p>
-        <div id="dmMessages" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; height: 300px; overflow-y: scroll; background: #f9f9f9;"></div>
-        <textarea id="dmInput" placeholder="Type your message..."></textarea>
-        <button onclick="sendDM()">Send</button>
-    </div>
+  <div id="help-requests"></div>
 
-    <script>
-        // Simulated current logged-in user
-        const currentUser = "user123";
+  <script>
+    let requests = JSON.parse(localStorage.getItem('requests') || '[]');
 
-        function showPage(pageId) {
-            document.querySelectorAll('.container').forEach(page => page.style.display = 'none');
-            document.getElementById(pageId).style.display = 'block';
-        }
+    function showRequestForm() {
+      document.getElementById('request-form').style.display = 'block';
+    }
 
-        function saveRequests() {
-            const requests = document.querySelectorAll('.help-requests .request');
-            const savedRequests = [];
+    function submitRequest() {
+      const text = document.getElementById('help-text').value.trim();
+      if (!text) return alert('Please enter your help request.');
+      const req = { id: Date.now(), text, dm: [] };
+      requests.push(req);
+      localStorage.setItem('requests', JSON.stringify(requests));
+      document.getElementById('help-text').value = '';
+      renderRequests();
+    }
 
-            requests.forEach(request => {
-                savedRequests.push({
-                    title: request.querySelector('h3').textContent,
-                    description: request.querySelector('p').textContent,
-                    creator: request.getAttribute('data-creator')
-                });
-            });
+    function renderRequests() {
+      const container = document.getElementById('help-requests');
+      container.innerHTML = '';
+      requests.forEach(req => {
+        const div = document.createElement('div');
+        div.className = 'request';
+        div.innerHTML = `
+          <p>${req.text}</p>
+          <button onclick="openDM(${req.id})">Help</button>
+          <button onclick="deleteRequest(${req.id})">Delete</button>
+          <div id="dm-${req.id}" class="dm-window" style="display:none;"></div>
+          <input type="text" id="dm-input-${req.id}" placeholder="Type a message" style="display:none;width:calc(100% - 110px);">
+          <button onclick="sendDM(${req.id})" style="display:none;" id="send-btn-${req.id}">Send</button>
+        `;
+        container.appendChild(div);
+      });
+    }
 
-            localStorage.setItem('helpRequests', JSON.stringify(savedRequests));
-        }
+    function openDM(id) {
+      const req = requests.find(r => r.id === id);
+      const dmDiv = document.getElementById(`dm-${id}`);
+      const input = document.getElementById(`dm-input-${id}`);
+      const sendBtn = document.getElementById(`send-btn-${id}`);
+      dmDiv.style.display = input.style.display = sendBtn.style.display = 'block';
+      renderDM(req);
+    }
 
-        function loadRequests() {
-            const savedRequests = JSON.parse(localStorage.getItem('helpRequests')) || [];
-            const helpRequestsDiv = document.getElementById('helpRequests');
+    function renderDM(req) {
+      const dmDiv = document.getElementById(`dm-${req.id}`);
+      dmDiv.innerHTML = req.dm.map(m => `<div>${m}</div>`).join('');
+    }
 
-            helpRequestsDiv.innerHTML = '';
+    function sendDM(id) {
+      const input = document.getElementById(`dm-input-${id}`);
+      const text = input.value.trim();
+      if (!text) return;
+      const req = requests.find(r => r.id === id);
+      req.dm.push(text);
+      localStorage.setItem('requests', JSON.stringify(requests));
+      input.value = '';
+      renderDM(req);
+    }
 
-            savedRequests.forEach(request => {
-                const newRequest = document.createElement('div');
-                newRequest.classList.add('request');
-                newRequest.setAttribute('data-creator', request.creator);
+    function deleteRequest(id) {
+      requests = requests.filter(r => r.id !== id);
+      localStorage.setItem('requests', JSON.stringify(requests));
+      renderRequests();
+    }
 
-                newRequest.innerHTML = `
-                    <h3>${request.title}</h3>
-                    <p>${request.description}</p>
-                    <button class="help-btn" onclick="startDM('${request.title}')">Help</button>
-                    <button class="delete-btn" onclick="deleteRequest(this)">Delete</button>
-                `;
-
-                helpRequestsDiv.appendChild(newRequest);
-            });
-        }
-
-        document.getElementById('helpForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-
-            const newRequest = document.createElement('div');
-            newRequest.classList.add('request');
-            newRequest.setAttribute('data-creator', currentUser);
-
-            newRequest.innerHTML = `
-                <h3>${title}</h3>
-                <p>${description}</p>
-                <button class="help-btn" onclick="startDM('${title}')">Help</button>
-                <button class="delete-btn" onclick="deleteRequest(this)">Delete</button>
-            `;
-
-            document.getElementById('helpRequests').appendChild(newRequest);
-
-            saveRequests();
-            document.getElementById('helpForm').reset();
-            showPage('homePage');
-        });
-
-        function deleteRequest(button) {
-            const requestDiv = button.closest('.request');
-            const creator = requestDiv.getAttribute('data-creator');
-
-            if (creator !== currentUser) {
-                alert("You can only delete your own requests!");
-                return;
-            }
-
-            requestDiv.remove();
-            saveRequests();
-        }
-
-        function startDM(title) {
-            showPage('dmPage');
-            document.getElementById('dmTitle').textContent = title;
-            const dmMessagesDiv = document.getElementById('dmMessages');
-            const savedMessages = JSON.parse(localStorage.getItem('dmMessages')) || {};
-
-            dmMessagesDiv.innerHTML = (savedMessages[title] || []).map(msg => `<div>${msg}</div>`).join('');
-        }
-
-        function sendDM() {
-            const dmInput = document.getElementById('dmInput');
-            const message = dmInput.value.trim();
-            const dmTitle = document.getElementById('dmTitle').textContent;
+    renderRequests();
+  </script>
+</body>
+</html>
